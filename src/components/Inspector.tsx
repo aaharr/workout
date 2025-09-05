@@ -1,6 +1,8 @@
 import React, { useRef } from 'react';
 import { useStore } from '../store/useStore';
 import type { Card } from '../store/useStore';
+import type { WorkoutSchema } from '../types/WorkoutSchema';
+import { CURRENT_VERSION } from '../types/WorkoutSchema';
 
 const Inspector: React.FC = () => {
   const { cards, selectedCardId, updateCardText, updateCardCue, updateCardDuration, updateCardReps, updateCardWeight, clearAllCards, workoutTitle, updateWorkoutTitle, importWorkout } = useStore();
@@ -113,8 +115,8 @@ const Inspector: React.FC = () => {
         {/* Export Button */}
         <button
           onClick={() => {
-            const workoutData = {
-              version: '1.0.0',
+            const workoutData: WorkoutSchema = {
+              version: CURRENT_VERSION,
               title: workoutTitle,
               cards: cards
             };
@@ -169,12 +171,12 @@ const Inspector: React.FC = () => {
                 try {
                   const content = event.target?.result;
                   if (typeof content === 'string') {
-                    const workoutData = JSON.parse(content);
+                    const parsedData = JSON.parse(content);
+                    const workoutData = parsedData as WorkoutSchema;
                     
-                    // Validate basic structure
+                    // Simple check for basic structure
                     if (workoutData && Array.isArray(workoutData.cards)) {
                       if (confirm('Importing a workout will replace your current workout. Continue?')) {
-                        // Use the importWorkout function from the store
                         importWorkout(workoutData.title || 'Imported Workout', workoutData.cards);
                       }
                     } else {
