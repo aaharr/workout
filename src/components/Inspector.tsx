@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useStore } from '../store/useStore';
+import type { Card } from '../store/useStore';
 
 const Inspector: React.FC = () => {
-  const { cards, selectedCardId, updateCardText, updateCardCue, updateCardDuration, updateCardReps, updateCardWeight, clearAllCards } = useStore();
+  const { cards, selectedCardId, updateCardText, updateCardCue, updateCardDuration, updateCardReps, updateCardWeight, clearAllCards, workoutTitle, updateWorkoutTitle, importWorkout } = useStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const selectedCard = cards.find(card => card.id === selectedCardId);
   
@@ -99,14 +101,131 @@ const Inspector: React.FC = () => {
         )}
       </div>
       
-      {/* Clear Workout Button - Fixed at the bottom */}
+      {/* Action Buttons - Fixed at the bottom */}
       <div style={{ 
         display: 'flex', 
-        justifyContent: 'center',
+        flexDirection: 'column',
+        gap: '8px',
         padding: '16px 0',
         position: 'sticky',
         bottom: '0'
       }}>
+        {/* Export Button */}
+        <button
+          onClick={() => {
+            const workoutData = {
+              version: '1.0.0',
+              title: workoutTitle,
+              cards: cards
+            };
+            const dataStr = JSON.stringify(workoutData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `${workoutTitle.replace(/\s+/g, '_')}_workout.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+          }}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: 'rgba(100, 149, 237, 0.2)',
+            color: 'rgba(100, 149, 237, 0.8)',
+            border: '1px dotted rgba(100, 149, 237, 0.6)',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(100, 149, 237, 0.3)';
+            e.currentTarget.style.color = 'rgba(100, 149, 237, 1)';
+            e.currentTarget.style.border = '1px dotted rgba(100, 149, 237, 0.8)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(100, 149, 237, 0.2)';
+            e.currentTarget.style.color = 'rgba(100, 149, 237, 0.8)';
+            e.currentTarget.style.border = '1px dotted rgba(100, 149, 237, 0.6)';
+          }}
+        >
+          💾 Export Workout
+        </button>
+        
+        {/* Import Button */}
+        <input
+          type="file"
+          accept=".json"
+          ref={fileInputRef}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                try {
+                  const content = event.target?.result;
+                  if (typeof content === 'string') {
+                    const workoutData = JSON.parse(content);
+                    
+                    // Validate basic structure
+                    if (workoutData && Array.isArray(workoutData.cards)) {
+                      if (confirm('Importing a workout will replace your current workout. Continue?')) {
+                        // Use the importWorkout function from the store
+                        importWorkout(workoutData.title || 'Imported Workout', workoutData.cards);
+                      }
+                    } else {
+                      alert('Invalid workout file format');
+                    }
+                  }
+                } catch (error) {
+                  alert('Error parsing JSON file');
+                  console.error(error);
+                }
+              };
+              reader.readAsText(file);
+            }
+            // Reset the file input
+            if (e.target) {
+              e.target.value = '';
+            }
+          }}
+          style={{ display: 'none' }}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: 'rgba(106, 168, 79, 0.2)',
+            color: 'rgba(106, 168, 79, 0.8)',
+            border: '1px dotted rgba(106, 168, 79, 0.6)',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(106, 168, 79, 0.3)';
+            e.currentTarget.style.color = 'rgba(106, 168, 79, 1)';
+            e.currentTarget.style.border = '1px dotted rgba(106, 168, 79, 0.8)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(106, 168, 79, 0.2)';
+            e.currentTarget.style.color = 'rgba(106, 168, 79, 0.8)';
+            e.currentTarget.style.border = '1px dotted rgba(106, 168, 79, 0.6)';
+          }}
+        >
+          📥 Import Workout
+        </button>
+        
+        {/* Clear Workout Button */}
         <button
           onClick={() => {
             if (confirm('Are you sure you want to clear the entire workout?')) {
@@ -124,6 +243,7 @@ const Inspector: React.FC = () => {
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
             gap: '8px'
           }}
           onMouseEnter={(e) => {

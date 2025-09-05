@@ -111,6 +111,12 @@ export const useStore = create<Store>()(
   
   clearAllCards: () => set({ cards: [], selectedCardId: null }),
   
+  importWorkout: (title: string, importedCards: Card[]) => set({
+    workoutTitle: title,
+    cards: importedCards,
+    selectedCardId: null
+  }),
+  
   handleDragEnd: (result: DropResult) => {
     const { source, destination } = result;
     
