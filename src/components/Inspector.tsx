@@ -5,10 +5,11 @@ import type { WorkoutSchema } from '../types/WorkoutSchema';
 import { CURRENT_VERSION } from '../types/WorkoutSchema';
 
 const Inspector: React.FC = () => {
-  const { cards: blocks, selectedCardId: selectedBlockId, updateCardText: updateBlockText, updateCardCue: updateBlockCue, updateCardDuration: updateBlockDuration, updateCardReps: updateBlockReps, updateCardWeight: updateBlockWeight, clearAllCards: clearAllBlocks, workoutTitle, updateWorkoutTitle, importWorkout } = useStore();
+  const { cards: blocks, selectedCardIds: selectedBlockIds, updateCardText: updateBlockText, updateCardCue: updateBlockCue, updateCardDuration: updateBlockDuration, updateCardReps: updateBlockReps, updateCardWeight: updateBlockWeight, clearAllCards: clearAllBlocks, workoutTitle, updateWorkoutTitle, importWorkout } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const selectedBlock = blocks.find(block => block.id === selectedBlockId);
+  // For now, only show inspector for single selection
+  const selectedBlock = selectedBlockIds.length === 1 ? blocks.find(block => block.id === selectedBlockIds[0]) : null;
   
   return (
     <div style={{ 
@@ -96,6 +97,12 @@ const Inspector: React.FC = () => {
               </>
             )}
           </>
+        ) : selectedBlockIds.length > 1 ? (
+          <div style={{ padding: '16px', textAlign: 'center', color: '#888' }}>
+            <p style={{ margin: '24px 0 8px 0', fontSize: '14px', fontStyle: 'italic' }}>
+              {selectedBlockIds.length} blocks selected
+            </p>
+          </div>
         ) : (
           <div style={{ padding: '16px', textAlign: 'center', color: '#888' }}>
             <p style={{ margin: '24px 0 8px 0', fontSize: '14px', fontStyle: 'italic' }}>

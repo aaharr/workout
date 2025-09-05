@@ -20,11 +20,11 @@ export interface Card {
 
 interface Store {
   cards: Card[];
-  selectedCardId: string | null;
+  selectedCardIds: string[];
   workoutTitle: string;
   addCard: (card: Card) => void;
   updateCardText: (id: string, text: string) => void;
-  setSelectedCardId: (id: string | null) => void;
+  setSelectedCardIds: (ids: string[]) => void;
   reorderCards: (startIndex: number, endIndex: number) => void;
   deleteCard: (id: string) => void;
   updateWorkoutTitle: (title: string) => void;
@@ -36,12 +36,12 @@ export const useStore = create<Store>()(
   persist(
     (set, get) => ({
       cards: [],
-      selectedCardId: null,
+      selectedCardIds: [],
       workoutTitle: 'My Workout',
   
   addCard: (card: Card) => set((state) => ({ 
     cards: [...state.cards, card],
-    selectedCardId: card.id
+    selectedCardIds: [card.id]
   })),
   
   updateCardText: (id: string, text: string) => set((state) => ({
@@ -56,7 +56,7 @@ export const useStore = create<Store>()(
     )
   })),
   
-  setSelectedCardId: (id: string | null) => set({ selectedCardId: id }),
+  setSelectedCardIds: (ids: string[]) => set({ selectedCardIds: ids }),
   
   reorderCards: (startIndex: number, endIndex: number) => set((state) => {
     const result = Array.from(state.cards);
@@ -67,7 +67,7 @@ export const useStore = create<Store>()(
   
   deleteCard: (id: string) => set((state) => ({
     cards: state.cards.filter(card => card.id !== id),
-    selectedCardId: state.selectedCardId === id ? null : state.selectedCardId
+    selectedCardIds: state.selectedCardIds.filter(selectedId => selectedId !== id)
   })),
   
   updateWorkoutTitle: (title: string) => set({ workoutTitle: title }),
@@ -105,16 +105,53 @@ export const useStore = create<Store>()(
     
     return {
       cards: newCards,
-      selectedCardId: newCard.id
+      selectedCardIds: [newCard.id]
     };
   }),
   
-  clearAllCards: () => set({ cards: [], selectedCardId: null }),
+  clearAllCards: () => set({ cards: [], selectedCardIds: [] }),
   
   importWorkout: (title: string, importedCards: Card[]) => set({
     workoutTitle: title,
     cards: importedCards,
-    selectedCardId: null
+    selectedCardIds: []
+  }),
+  
+  // Add these new functions before handleDragEnd
+  deleteSelectedCards: () => set((state) => ({
+    cards: state.cards.filter(card => !state.selectedCardIds.includes(card.id)),
+    selectedCardIds: []
+  })),
+  
+  duplicateSelectedCards: () => set((state) => {
+    // Get indices of selected cards in order
+    const selectedIndices = state.selectedCardIds
+      .map(id => state.cards.findIndex(card => card.id === id))
+      .sort((a, b) => a - b);
+    
+    // Find the maximum index to insert after all selected cards
+    const maxIndex = Math.max(...selectedIndices);
+    
+    const newCards = [...state.cards];
+    const newSelectedIds: string[] = [];
+    
+    // Insert all duplicates after the last selected card, maintaining their order
+    selectedIndices.forEach((originalIndex, i) => {
+      const cardToDuplicate = state.cards[originalIndex];
+      const newCard: Card = {
+        ...cardToDuplicate,
+        id: `card-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`
+      };
+      
+      // Insert after maxIndex, offset by the number of cards we've already inserted
+      newCards.splice(maxIndex + 1 + i, 0, newCard);
+      newSelectedIds.push(newCard.id);
+    });
+    
+    return {
+      cards: newCards,
+      selectedCardIds: newSelectedIds
+    };
   }),
   
   handleDragEnd: (result: DropResult) => {
@@ -175,7 +212,7 @@ export const useStore = create<Store>()(
         newCards.splice(destination.index, 0, newCard);
         return { 
           cards: newCards,
-          selectedCardId: newCard.id
+          selectedCardIds: [newCard.id]
         };
       });
       return;

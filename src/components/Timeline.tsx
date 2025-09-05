@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useStore } from '../store/useStore';
 import { Copy, Trash2 } from 'lucide-react';
 
 const Timeline: React.FC = () => {
-  const { cards, setSelectedCardId, deleteCard, duplicateCard, workoutTitle, updateWorkoutTitle, clearAllCards } = useStore();
+  const { cards, selectedCardIds, setSelectedCardIds, deleteCard, duplicateCard, 
+          deleteSelectedCards, duplicateSelectedCards, workoutTitle, updateWorkoutTitle } = useStore();
+  const lastSelectedIndex = useRef<number | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(workoutTitle);
+  const timelineRef = useRef<HTMLDivElement>(null);
   
   const getCardStyle = (card: any) => {
     if (card.type === 'strength') {
@@ -61,15 +64,19 @@ const Timeline: React.FC = () => {
     }
   };
 
+
   return (
-    <div style={{ 
-      padding: '16px', 
-      color: 'white',
-      height: '100vh',
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
+    <div 
+      ref={timelineRef}
+      style={{ 
+        padding: '16px', 
+        color: 'white',
+        height: '100vh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
         {isEditingTitle ? (
           <input
@@ -126,7 +133,9 @@ const Timeline: React.FC = () => {
             {workoutTitle || 'Workout Title'}
           </h3>
         )}
+        
       </div>
+      
       <Droppable droppableId="timeline">
         {(provided) => (
           <div
@@ -148,8 +157,42 @@ const Timeline: React.FC = () => {
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    onClick={() => setSelectedCardId(card.id)}
+                    onClick={(e) => {
+                      const currentIndex = cards.findIndex(c => c.id === card.id);
+                      
+                      if (e.shiftKey && lastSelectedIndex.current !== null) {
+                        // Range selection between last selected index and current index
+                        const startIndex = Math.min(lastSelectedIndex.current, currentIndex);
+                        const endIndex = Math.max(lastSelectedIndex.current, currentIndex);
+                        
+                        // Get all IDs in the range
+                        const rangeIds = cards
+                          .slice(startIndex, endIndex + 1)
+                          .map(c => c.id);
+                        
+                        // Add to existing selection
+                        const newSelectedIds = Array.from(
+                          new Set([...selectedCardIds, ...rangeIds])
+                        );
+                        setSelectedCardIds(newSelectedIds);
+                      } else if (e.ctrlKey || e.metaKey) {
+                        // Toggle selection of this card
+                        if (selectedCardIds.includes(card.id)) {
+                          setSelectedCardIds(selectedCardIds.filter(id => id !== card.id));
+                        } else {
+                          setSelectedCardIds([...selectedCardIds, card.id]);
+                        }
+                      } else {
+                        // Single selection
+                        setSelectedCardIds([card.id]);
+                      }
+                      
+                      // Always update the last selected index
+                      lastSelectedIndex.current = currentIndex;
+                    }}
                     style={{
+                      border: selectedCardIds.includes(card.id) ? '2px solid #007bff' : undefined,
+                      boxShadow: selectedCardIds.includes(card.id) ? '0 0 0 2px rgba(0, 123, 255, 0.25)' : undefined,
                       padding: '8px',
                       margin: '8px 0',
                       borderRadius: '4px',
@@ -215,7 +258,11 @@ const Timeline: React.FC = () => {
                         className="duplicate-button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          duplicateCard(card.id);
+                          if (selectedCardIds.length > 1) {
+                            duplicateSelectedCards();
+                          } else {
+                            duplicateCard(card.id);
+                          }
                         }}
                         style={{
                           background: 'rgba(255, 255, 255, 0.8)',
@@ -230,7 +277,7 @@ const Timeline: React.FC = () => {
                           color: 'black',
                           pointerEvents: 'auto'
                         }}
-                        title="Duplicate"
+                        title={selectedCardIds.length > 1 ? "Duplicate Selected" : "Duplicate"}
                       >
                         <Copy size={16} />
                       </button>
@@ -238,7 +285,13 @@ const Timeline: React.FC = () => {
                         className="delete-button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          deleteCard(card.id);
+                          if (selectedCardIds.length > 1) {
+                            if (confirm(`Delete ${selectedCardIds.length} selected blocks?`)) {
+                              deleteSelectedCards();
+                            }
+                          } else {
+                            deleteCard(card.id);
+                          }
                         }}
                         style={{
                           background: 'rgba(255, 255, 255, 0.8)',
@@ -253,7 +306,7 @@ const Timeline: React.FC = () => {
                           color: 'black',
                           pointerEvents: 'auto'
                         }}
-                        title="Delete"
+                        title={selectedCardIds.length > 1 ? "Delete Selected" : "Delete"}
                       >
                         <Trash2 size={16} />
                       </button>
