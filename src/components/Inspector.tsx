@@ -2,7 +2,7 @@ import React from 'react';
 import { useStore } from '../store/useStore';
 
 const Inspector: React.FC = () => {
-  const { cards, selectedCardId, updateCardText, updateCardDuration, updateCardReps, updateCardWeight, clearAllCards } = useStore();
+  const { cards, selectedCardId, updateCardText, updateCardCue, updateCardDuration, updateCardReps, updateCardWeight, clearAllCards } = useStore();
   
   const selectedCard = cards.find(card => card.id === selectedCardId);
   
@@ -25,7 +25,7 @@ const Inspector: React.FC = () => {
       <div style={{ flex: 1, overflow: 'auto' }}>
         {/* Description Field */}
         <div style={{ marginBottom: '16px' }}>
-          <h4 style={{ margin: '0 0 4px 0', color: '#ff6b6b' }}>Description:</h4>
+          <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Description:</h4>
           <textarea
             value={selectedCard.text}
             onChange={(e) => updateCardText(selectedCard.id, e.target.value)}
@@ -33,10 +33,21 @@ const Inspector: React.FC = () => {
           />
         </div>
         
+        {/* Cue Field - Always visible for all cards */}
+        <div style={{ marginBottom: '16px' }}>
+          <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Cue:</h4>
+          <textarea
+            value={selectedCard.cue || ''}
+            onChange={(e) => updateCardCue(selectedCard.id, e.target.value)}
+            style={{ width: '100%', minHeight: '40px', color: 'black', padding: '4px' }}
+            placeholder="Enter cue information"
+          />
+        </div>
+        
         {/* Duration Field for Cardio */}
         {selectedCard.type === 'cardio' && selectedCard.duration !== undefined && (
           <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ margin: '0 0 4px 0', color: '#ff6b6b' }}>Duration (minutes):</h4>
+            <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Duration (minutes):</h4>
             <input
               type="number"
               value={selectedCard.duration ?? ''}
@@ -50,7 +61,7 @@ const Inspector: React.FC = () => {
         {/* Duration Field for Strength Rest */}
         {selectedCard.type === 'strength' && selectedCard.strengthSubtype === 'rest' && selectedCard.duration !== undefined && (
           <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ margin: '0 0 4px 0', color: '#4ecdc4' }}>Duration (minutes):</h4>
+            <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Duration (minutes):</h4>
             <input
               type="number"
               value={selectedCard.duration ?? ''}
@@ -65,7 +76,7 @@ const Inspector: React.FC = () => {
         {selectedCard.type === 'strength' && selectedCard.strengthSubtype === 'set' && selectedCard.reps !== undefined && (
           <>
             <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ margin: '0 0 4px 0', color: '#4ecdc4' }}>Reps:</h4>
+              <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Reps:</h4>
               <input
                 type="number"
                 value={selectedCard.reps ?? ''}
@@ -75,7 +86,7 @@ const Inspector: React.FC = () => {
               />
             </div>
             <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ margin: '0 0 4px 0', color: '#4ecdc4' }}>Weight (lbs):</h4>
+              <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Weight (lbs):</h4>
               <input
                 type="number"
                 value={selectedCard.weight ?? ''}

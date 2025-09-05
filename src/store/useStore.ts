@@ -9,6 +9,7 @@ export type StrengthSubtype = 'set' | 'rest';
 export interface Card {
   id: string;
   text: string;
+  cue?: string;
   type: CardType;
   cardioSubtype?: CardioSubtype;
   strengthSubtype?: StrengthSubtype;
@@ -46,6 +47,12 @@ export const useStore = create<Store>()(
   updateCardText: (id: string, text: string) => set((state) => ({
     cards: state.cards.map(card => 
       card.id === id ? { ...card, text } : card
+    )
+  })),
+  
+  updateCardCue: (id: string, cue: string) => set((state) => ({
+    cards: state.cards.map(card => 
+      card.id === id ? { ...card, cue } : card
     )
   })),
   
