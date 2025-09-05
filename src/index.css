@@ -17,3 +17,8 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Style for the delete button */
+.delete-button:hover {
+  background-color: #cc0000 !important;
+}

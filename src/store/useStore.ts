@@ -1,24 +1,38 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { DropResult } from '@hello-pangea/dnd';
+
+export type CardType = 'cardio' | 'lifting';
+export type CardioSubtype = 'warmup' | 'cooldown' | 'interval';
 
 export interface Card {
   id: string;
   text: string;
+  type: CardType;
+  cardioSubtype?: CardioSubtype;
+  duration?: number; // in seconds
 }
 
 interface Store {
   cards: Card[];
   selectedCardId: string | null;
+  workoutTitle: string;
   addCard: (card: Card) => void;
   updateCardText: (id: string, text: string) => void;
   setSelectedCardId: (id: string | null) => void;
   reorderCards: (startIndex: number, endIndex: number) => void;
+  deleteCard: (id: string) => void;
+  updateWorkoutTitle: (title: string) => void;
+  updateCardDuration: (id: string, duration: number) => void;
   handleDragEnd: (result: DropResult) => void;
 }
 
-export const useStore = create<Store>((set, get) => ({
-  cards: [],
-  selectedCardId: null,
+export const useStore = create<Store>()(
+  persist(
+    (set, get) => ({
+      cards: [],
+      selectedCardId: null,
+      workoutTitle: 'My Workout',
   
   addCard: (card: Card) => set((state) => ({ 
     cards: [...state.cards, card],
@@ -40,6 +54,19 @@ export const useStore = create<Store>((set, get) => ({
     return { cards: result };
   }),
   
+  deleteCard: (id: string) => set((state) => ({
+    cards: state.cards.filter(card => card.id !== id),
+    selectedCardId: state.selectedCardId === id ? null : state.selectedCardId
+  })),
+  
+  updateWorkoutTitle: (title: string) => set({ workoutTitle: title }),
+  
+  updateCardDuration: (id: string, duration: number) => set((state) => ({
+    cards: state.cards.map(card => 
+      card.id === id ? { ...card, duration } : card
+    )
+  })),
+  
   handleDragEnd: (result: DropResult) => {
     const { source, destination } = result;
     
@@ -47,12 +74,46 @@ export const useStore = create<Store>((set, get) => ({
     if (!destination) return;
     
     // Handle palette to timeline drop
-    if (source.droppableId === 'palette' && destination.droppableId === 'timeline') {
+    if (source.droppableId.startsWith('palette-') && destination.droppableId === 'timeline') {
+      const [_, category, subtype] = source.droppableId.split('-');
+      const cardType = category as CardType;
+      
+      let defaultText: string;
+      let cardioSubtype: CardioSubtype | undefined;
+      let duration: number | undefined;
+      
+      switch (cardType) {
+        case 'cardio':
+          cardioSubtype = subtype as CardioSubtype;
+          defaultText = `${cardioSubtype.charAt(0).toUpperCase() + cardioSubtype.slice(1)}`;
+          // Set default duration to 4 minutes for all cardio subtypes
+          duration = 4;
+          break;
+        case 'lifting':
+          defaultText = 'Lifting Exercise';
+          break;
+        default:
+          defaultText = 'Exercise';
+          break;
+      }
+      
       const newCard: Card = {
         id: `card-${Date.now()}`,
-        text: 'New Card'
+        text: defaultText,
+        type: cardType,
+        cardioSubtype,
+        duration
       };
-      get().addCard(newCard);
+      
+      // Insert the new card at the drop position
+      set((state) => {
+        const newCards = Array.from(state.cards);
+        newCards.splice(destination.index, 0, newCard);
+        return { 
+          cards: newCards,
+          selectedCardId: newCard.id
+        };
+      });
       return;
     }
     
@@ -62,4 +123,9 @@ export const useStore = create<Store>((set, get) => ({
       return;
     }
   }
-}));
+}),
+  {
+    name: 'workout-store',
+    getStorage: () => sessionStorage,
+  }
+));
