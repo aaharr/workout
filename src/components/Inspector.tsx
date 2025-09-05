@@ -5,18 +5,10 @@ import type { WorkoutSchema } from '../types/WorkoutSchema';
 import { CURRENT_VERSION } from '../types/WorkoutSchema';
 
 const Inspector: React.FC = () => {
-  const { cards, selectedCardId, updateCardText, updateCardCue, updateCardDuration, updateCardReps, updateCardWeight, clearAllCards, workoutTitle, updateWorkoutTitle, importWorkout } = useStore();
+  const { cards: blocks, selectedCardId: selectedBlockId, updateCardText: updateBlockText, updateCardCue: updateBlockCue, updateCardDuration: updateBlockDuration, updateCardReps: updateBlockReps, updateCardWeight: updateBlockWeight, clearAllCards: clearAllBlocks, workoutTitle, updateWorkoutTitle, importWorkout } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const selectedCard = cards.find(card => card.id === selectedCardId);
-  
-  if (!selectedCard) {
-    return (
-      <div style={{ padding: '16px', color: 'white' }}>
-        <p>Select a card to edit</p>
-      </div>
-    );
-  }
+  const selectedBlock = blocks.find(block => block.id === selectedBlockId);
   
   return (
     <div style={{ 
@@ -27,79 +19,89 @@ const Inspector: React.FC = () => {
       flexDirection: 'column'
     }}>
       <div style={{ flex: 1, overflow: 'auto' }}>
-        {/* Description Field */}
-        <div style={{ marginBottom: '16px' }}>
-          <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Description:</h4>
-          <textarea
-            value={selectedCard.text}
-            onChange={(e) => updateCardText(selectedCard.id, e.target.value)}
-            style={{ width: '100%', minHeight: '60px', color: 'black', padding: '4px' }}
-          />
-        </div>
-        
-        {/* Cue Field - Always visible for all cards */}
-        <div style={{ marginBottom: '16px' }}>
-          <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Cue:</h4>
-          <textarea
-            value={selectedCard.cue || ''}
-            onChange={(e) => updateCardCue(selectedCard.id, e.target.value)}
-            style={{ width: '100%', minHeight: '40px', color: 'black', padding: '4px' }}
-            placeholder="Enter cue information"
-          />
-        </div>
-        
-        {/* Duration Field for Cardio */}
-        {selectedCard.type === 'cardio' && selectedCard.duration !== undefined && (
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Duration (minutes):</h4>
-            <input
-              type="number"
-              value={selectedCard.duration ?? ''}
-              onChange={(e) => updateCardDuration(selectedCard.id, Number(e.target.value))}
-              min="1"
-              style={{ width: '100%', color: 'black', padding: '4px' }}
-            />
-          </div>
-        )}
-        
-        {/* Duration Field for Strength Rest */}
-        {selectedCard.type === 'strength' && selectedCard.strengthSubtype === 'rest' && selectedCard.duration !== undefined && (
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Duration (minutes):</h4>
-            <input
-              type="number"
-              value={selectedCard.duration ?? ''}
-              onChange={(e) => updateCardDuration(selectedCard.id, Number(e.target.value))}
-              min="1"
-              style={{ width: '100%', color: 'black', padding: '4px' }}
-            />
-          </div>
-        )}
-        
-        {/* Reps and Weight Fields for Strength Set */}
-        {selectedCard.type === 'strength' && selectedCard.strengthSubtype === 'set' && selectedCard.reps !== undefined && (
+        {selectedBlock ? (
           <>
+            {/* Description Field */}
             <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Reps:</h4>
-              <input
-                type="number"
-                value={selectedCard.reps ?? ''}
-                onChange={(e) => updateCardReps(selectedCard.id, Number(e.target.value))}
-                min="1"
-                style={{ width: '100%', color: 'black', padding: '4px' }}
+              <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Description:</h4>
+              <textarea
+                value={selectedBlock.text}
+                onChange={(e) => updateBlockText(selectedBlock.id, e.target.value)}
+                style={{ width: '100%', minHeight: '60px', color: 'black', padding: '4px' }}
               />
             </div>
+            
+            {/* Cue Field - Always visible for all blocks */}
             <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Weight (lbs):</h4>
-              <input
-                type="number"
-                value={selectedCard.weight ?? ''}
-                onChange={(e) => updateCardWeight(selectedCard.id, Number(e.target.value))}
-                min="0"
-                style={{ width: '100%', color: 'black', padding: '4px' }}
+              <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Cue:</h4>
+              <textarea
+                value={selectedBlock.cue || ''}
+                onChange={(e) => updateBlockCue(selectedBlock.id, e.target.value)}
+                style={{ width: '100%', minHeight: '40px', color: 'black', padding: '4px' }}
+                placeholder="Enter cue information"
               />
             </div>
+            
+            {/* Duration Field for Cardio */}
+            {selectedBlock.type === 'cardio' && selectedBlock.duration !== undefined && (
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Duration (minutes):</h4>
+                <input
+                  type="number"
+                  value={selectedBlock.duration ?? ''}
+                  onChange={(e) => updateBlockDuration(selectedBlock.id, Number(e.target.value))}
+                  min="1"
+                  style={{ width: '100%', color: 'black', padding: '4px' }}
+                />
+              </div>
+            )}
+            
+            {/* Duration Field for Strength Rest */}
+            {selectedBlock.type === 'strength' && selectedBlock.strengthSubtype === 'rest' && selectedBlock.duration !== undefined && (
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Duration (minutes):</h4>
+                <input
+                  type="number"
+                  value={selectedBlock.duration ?? ''}
+                  onChange={(e) => updateBlockDuration(selectedBlock.id, Number(e.target.value))}
+                  min="1"
+                  style={{ width: '100%', color: 'black', padding: '4px' }}
+                />
+              </div>
+            )}
+            
+            {/* Reps and Weight Fields for Strength Set */}
+            {selectedBlock.type === 'strength' && selectedBlock.strengthSubtype === 'set' && selectedBlock.reps !== undefined && (
+              <>
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Reps:</h4>
+                  <input
+                    type="number"
+                    value={selectedBlock.reps ?? ''}
+                    onChange={(e) => updateBlockReps(selectedBlock.id, Number(e.target.value))}
+                    min="1"
+                    style={{ width: '100%', color: 'black', padding: '4px' }}
+                  />
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Weight (lbs):</h4>
+                  <input
+                    type="number"
+                    value={selectedBlock.weight ?? ''}
+                    onChange={(e) => updateBlockWeight(selectedBlock.id, Number(e.target.value))}
+                    min="0"
+                    style={{ width: '100%', color: 'black', padding: '4px' }}
+                  />
+                </div>
+              </>
+            )}
           </>
+        ) : (
+          <div style={{ padding: '16px', textAlign: 'center', color: '#888' }}>
+            <p style={{ margin: '24px 0 8px 0', fontSize: '14px', fontStyle: 'italic' }}>
+              Select a block to edit its properties
+            </p>
+          </div>
         )}
       </div>
       
@@ -118,7 +120,7 @@ const Inspector: React.FC = () => {
             const workoutData: WorkoutSchema = {
               version: CURRENT_VERSION,
               title: workoutTitle,
-              cards: cards
+              cards: blocks
             };
             const dataStr = JSON.stringify(workoutData, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -231,7 +233,7 @@ const Inspector: React.FC = () => {
         <button
           onClick={() => {
             if (confirm('Are you sure you want to clear the entire workout?')) {
-              clearAllCards();
+              clearAllBlocks();
             }
           }}
           style={{

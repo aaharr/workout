@@ -3,7 +3,13 @@ import { Draggable, Droppable } from '@hello-pangea/dnd';
 
 const Palette: React.FC = () => {
   return (
-    <div style={{ padding: '72px 16px 16px 16px', color: 'white' }}>
+    <div style={{ 
+      padding: '72px 16px 16px 16px', 
+      color: 'white',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
       
       {/* Cardio Category */}
       <div style={{ 
@@ -178,6 +184,30 @@ const Palette: React.FC = () => {
             </div>
           )}
         </Droppable>
+      </div>
+      
+      {/* Help Text - Anchored to the bottom */}
+      <div style={{ 
+        marginTop: 'auto',
+        padding: '16px 0',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        <div style={{ 
+          padding: '16px', 
+          textAlign: 'center', 
+          color: '#888',
+          fontSize: '14px'
+        }}>
+          <p style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>
+            Welcome to your workout planner!
+          </p>
+          <p style={{ margin: '0 0 4px 0' }}>
+            1. Drag a block from the palette above
+          </p>
+          <p style={{ margin: '0' }}>
+            2. Click on any block to edit its details
+          </p>
+        </div>
       </div>
     </div>
   );
