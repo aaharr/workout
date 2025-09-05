@@ -2,7 +2,7 @@ import React from 'react';
 import { useStore } from '../store/useStore';
 
 const Inspector: React.FC = () => {
-  const { cards, selectedCardId, updateCardText, updateCardDuration } = useStore();
+  const { cards, selectedCardId, updateCardText, updateCardDuration, updateCardReps, updateCardWeight, clearAllCards } = useStore();
   
   const selectedCard = cards.find(card => card.id === selectedCardId);
   
@@ -15,31 +15,120 @@ const Inspector: React.FC = () => {
   }
   
   return (
-    <div style={{ padding: '16px', color: 'white' }}>
-      <div style={{ marginBottom: '16px' }}>
-        <label>
-          Description:
+    <div style={{ 
+      padding: '72px 16px 16px 16px', 
+      color: 'white',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        {/* Description Field */}
+        <div style={{ marginBottom: '16px' }}>
+          <h4 style={{ margin: '0 0 4px 0', color: '#ff6b6b' }}>Description:</h4>
           <textarea
             value={selectedCard.text}
             onChange={(e) => updateCardText(selectedCard.id, e.target.value)}
-            style={{ width: '100%', minHeight: '60px', color: 'black', marginTop: '8px' }}
+            style={{ width: '100%', minHeight: '60px', color: 'black', padding: '4px' }}
           />
-        </label>
-      </div>
-      {selectedCard.type === 'cardio' && selectedCard.duration !== undefined && (
-        <div>
-          <label>
-            Duration (minutes):
+        </div>
+        
+        {/* Duration Field for Cardio */}
+        {selectedCard.type === 'cardio' && selectedCard.duration !== undefined && (
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ margin: '0 0 4px 0', color: '#ff6b6b' }}>Duration (minutes):</h4>
             <input
               type="number"
-              value={selectedCard.duration}
+              value={selectedCard.duration ?? ''}
               onChange={(e) => updateCardDuration(selectedCard.id, Number(e.target.value))}
               min="1"
-              style={{ width: '100%', color: 'black', marginTop: '8px', padding: '4px' }}
+              style={{ width: '100%', color: 'black', padding: '4px' }}
             />
-          </label>
-        </div>
-      )}
+          </div>
+        )}
+        
+        {/* Duration Field for Strength Rest */}
+        {selectedCard.type === 'strength' && selectedCard.strengthSubtype === 'rest' && selectedCard.duration !== undefined && (
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ margin: '0 0 4px 0', color: '#4ecdc4' }}>Duration (minutes):</h4>
+            <input
+              type="number"
+              value={selectedCard.duration ?? ''}
+              onChange={(e) => updateCardDuration(selectedCard.id, Number(e.target.value))}
+              min="1"
+              style={{ width: '100%', color: 'black', padding: '4px' }}
+            />
+          </div>
+        )}
+        
+        {/* Reps and Weight Fields for Strength Set */}
+        {selectedCard.type === 'strength' && selectedCard.strengthSubtype === 'set' && selectedCard.reps !== undefined && (
+          <>
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ margin: '0 0 4px 0', color: '#4ecdc4' }}>Reps:</h4>
+              <input
+                type="number"
+                value={selectedCard.reps ?? ''}
+                onChange={(e) => updateCardReps(selectedCard.id, Number(e.target.value))}
+                min="1"
+                style={{ width: '100%', color: 'black', padding: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ margin: '0 0 4px 0', color: '#4ecdc4' }}>Weight (lbs):</h4>
+              <input
+                type="number"
+                value={selectedCard.weight ?? ''}
+                onChange={(e) => updateCardWeight(selectedCard.id, Number(e.target.value))}
+                min="0"
+                style={{ width: '100%', color: 'black', padding: '4px' }}
+              />
+            </div>
+          </>
+        )}
+      </div>
+      
+      {/* Clear Workout Button - Fixed at the bottom */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center',
+        padding: '16px 0',
+        position: 'sticky',
+        bottom: '0'
+      }}>
+        <button
+          onClick={() => {
+            if (confirm('Are you sure you want to clear the entire workout?')) {
+              clearAllCards();
+            }
+          }}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: 'rgba(128, 128, 128, 0.2)',
+            color: 'rgba(128, 128, 128, 0.8)',
+            border: '1px dotted rgba(128, 128, 128, 0.6)',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(128, 128, 128, 0.3)';
+            e.currentTarget.style.color = 'rgba(128, 128, 128, 1)';
+            e.currentTarget.style.border = '1px dotted rgba(128, 128, 128, 0.8)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(128, 128, 128, 0.2)';
+            e.currentTarget.style.color = 'rgba(128, 128, 128, 0.8)';
+            e.currentTarget.style.border = '1px dotted rgba(128, 128, 128, 0.6)';
+          }}
+        >
+          ⚠️ Clear Workout
+        </button>
+      </div>
     </div>
   );
 };

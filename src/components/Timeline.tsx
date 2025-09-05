@@ -3,12 +3,18 @@ import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useStore } from '../store/useStore';
 
 const Timeline: React.FC = () => {
-  const { cards, setSelectedCardId, deleteCard, workoutTitle, updateWorkoutTitle } = useStore();
+  const { cards, setSelectedCardId, deleteCard, duplicateCard, workoutTitle, updateWorkoutTitle, clearAllCards } = useStore();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(workoutTitle);
   
   const getCardStyle = (card: any) => {
-    if (card.type === 'lifting') {
+    if (card.type === 'strength') {
+      if (card.strengthSubtype === 'rest') {
+        return {
+          border: '1px solid #9b59b6',
+          backgroundColor: '#f3e5f5',
+        };
+      }
       return {
         border: '1px solid #4ecdc4',
         backgroundColor: '#e0f7fa',
@@ -56,56 +62,65 @@ const Timeline: React.FC = () => {
 
   return (
     <div style={{ padding: '16px', color: 'white' }}>
-      {isEditingTitle ? (
-        <input
-          type="text"
-          value={tempTitle}
-          onChange={(e) => setTempTitle(e.target.value)}
-          onBlur={handleTitleSave}
-          onKeyDown={handleKeyPress}
-          autoFocus
-          style={{
-            fontSize: '1.5em',
-            fontWeight: 'bold',
-            color: 'white',
-            background: 'transparent',
-            border: '2px solid #666',
-            borderRadius: '4px',
-            padding: '4px 8px',
-            width: '100%',
-            marginBottom: '16px'
-          }}
-        />
-      ) : (
-        <h3 
-          onClick={() => {
-            setTempTitle(workoutTitle);
-            setIsEditingTitle(true);
-          }}
-          style={{
-            cursor: 'pointer',
-            marginBottom: '16px',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            display: 'inline-block',
-            minWidth: '200px'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#333';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-        >
-          {workoutTitle}
-        </h3>
-      )}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+        {isEditingTitle ? (
+          <input
+            type="text"
+            value={tempTitle}
+            onChange={(e) => setTempTitle(e.target.value)}
+            onBlur={handleTitleSave}
+            onKeyDown={handleKeyPress}
+            autoFocus
+            style={{
+              fontSize: '1.5em',
+              fontWeight: 'bold',
+              color: '#333',
+              background: 'transparent',
+              border: 'none',
+              padding: '0',
+              margin: '0',
+              width: '100%',
+              maxWidth: '400px',
+              textAlign: 'center',
+              outline: 'none',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+            }}
+            placeholder="Workout Title"
+          />
+        ) : (
+          <h3 
+            onClick={() => {
+              setTempTitle(workoutTitle);
+              setIsEditingTitle(true);
+            }}
+            style={{
+              cursor: 'pointer',
+              margin: '0',
+              padding: '0',
+              display: 'block',
+              color: '#333',
+              backgroundColor: 'transparent',
+              minHeight: '1.5em',
+              border: 'none',
+              fontSize: '1.5em',
+              fontWeight: 'bold',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+              textAlign: 'center'
+            }}
+          >
+            {workoutTitle || 'Workout Title'}
+          </h3>
+        )}
+      </div>
       <Droppable droppableId="timeline">
         {(provided) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            style={{ minHeight: '200px', border: '2px dashed #ccc', padding: '8px' }}
+            style={{
+              minHeight: 'calc(100vh - 100px)',
+              padding: '8px'
+            }}
           >
             {cards.map((card, index) => (
               <Draggable key={card.id} draggableId={card.id} index={index}>
@@ -128,14 +143,63 @@ const Timeline: React.FC = () => {
                     }}
                     onMouseEnter={(e) => {
                       const deleteButton = e.currentTarget.querySelector('.delete-button') as HTMLElement;
+                      const duplicateButton = e.currentTarget.querySelector('.duplicate-button') as HTMLElement;
                       if (deleteButton) deleteButton.style.opacity = '1';
+                      if (duplicateButton) duplicateButton.style.opacity = '1';
                     }}
                     onMouseLeave={(e) => {
                       const deleteButton = e.currentTarget.querySelector('.delete-button') as HTMLElement;
+                      const duplicateButton = e.currentTarget.querySelector('.duplicate-button') as HTMLElement;
                       if (deleteButton) deleteButton.style.opacity = '0';
+                      if (duplicateButton) duplicateButton.style.opacity = '0';
                     }}
                   >
-                    {card.text}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%' }}>
+                      <div style={{ flex: 1 }}>{card.text}</div>
+                      {card.duration && (
+                        <div style={{ fontSize: '12px', opacity: 0.8, whiteSpace: 'nowrap' }}>
+                          {card.duration} min
+                        </div>
+                      )}
+                      {card.reps && (
+                        <div style={{ fontSize: '12px', opacity: 0.8, whiteSpace: 'nowrap' }}>
+                          {card.reps} reps
+                        </div>
+                      )}
+                      {card.weight && (
+                        <div style={{ fontSize: '12px', opacity: 0.8, whiteSpace: 'nowrap' }}>
+                          {card.weight} lbs
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      className="duplicate-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        duplicateCard(card.id);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: '4px',
+                        right: '24px',
+                        background: 'rgba(255, 255, 255, 0.8)',
+                        border: '1px solid rgba(0, 0, 0, 0.2)',
+                        cursor: 'pointer',
+                        opacity: '0',
+                        transition: 'opacity 0.2s',
+                        fontSize: '12px',
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '3px',
+                        color: 'black'
+                      }}
+                      title="Duplicate"
+                    >
+                      ⎘
+                    </button>
                     <button
                       className="delete-button"
                       onClick={(e) => {
@@ -146,19 +210,23 @@ const Timeline: React.FC = () => {
                         position: 'absolute',
                         top: '4px',
                         right: '4px',
-                        background: 'none',
-                        border: 'none',
+                        background: 'rgba(255, 255, 255, 0.8)',
+                        border: '1px solid rgba(0, 0, 0, 0.2)',
                         cursor: 'pointer',
                         opacity: '0',
                         transition: 'opacity 0.2s',
-                        fontSize: '14px',
-                        padding: '2px 5px',
+                        fontSize: '12px',
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         borderRadius: '3px',
-                        backgroundColor: '#ff4444',
-                        color: 'white'
+                        color: 'black'
                       }}
+                      title="Delete"
                     >
-                      🗑️
+                      ×
                     </button>
                   </div>
                 )}

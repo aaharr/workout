@@ -2,15 +2,19 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DropResult } from '@hello-pangea/dnd';
 
-export type CardType = 'cardio' | 'lifting';
+export type CardType = 'cardio' | 'strength';
 export type CardioSubtype = 'warmup' | 'cooldown' | 'interval';
+export type StrengthSubtype = 'set' | 'rest';
 
 export interface Card {
   id: string;
   text: string;
   type: CardType;
   cardioSubtype?: CardioSubtype;
-  duration?: number; // in seconds
+  strengthSubtype?: StrengthSubtype;
+  duration?: number; // in minutes
+  reps?: number;
+  weight?: number; // in arbitrary units
 }
 
 interface Store {
@@ -67,6 +71,39 @@ export const useStore = create<Store>()(
     )
   })),
   
+  updateCardReps: (id: string, reps: number) => set((state) => ({
+    cards: state.cards.map(card => 
+      card.id === id ? { ...card, reps } : card
+    )
+  })),
+  
+  updateCardWeight: (id: string, weight: number) => set((state) => ({
+    cards: state.cards.map(card => 
+      card.id === id ? { ...card, weight } : card
+    )
+  })),
+  
+  duplicateCard: (id: string) => set((state) => {
+    const cardToDuplicate = state.cards.find(card => card.id === id);
+    if (!cardToDuplicate) return state;
+    
+    const index = state.cards.findIndex(card => card.id === id);
+    const newCard: Card = {
+      ...cardToDuplicate,
+      id: `card-${Date.now()}`
+    };
+    
+    const newCards = [...state.cards];
+    newCards.splice(index + 1, 0, newCard);
+    
+    return {
+      cards: newCards,
+      selectedCardId: newCard.id
+    };
+  }),
+  
+  clearAllCards: () => set({ cards: [], selectedCardId: null }),
+  
   handleDragEnd: (result: DropResult) => {
     const { source, destination } = result;
     
@@ -81,6 +118,8 @@ export const useStore = create<Store>()(
       let defaultText: string;
       let cardioSubtype: CardioSubtype | undefined;
       let duration: number | undefined;
+      let reps: number | undefined;
+      let weight: number | undefined;
       
       switch (cardType) {
         case 'cardio':
@@ -89,8 +128,18 @@ export const useStore = create<Store>()(
           // Set default duration to 4 minutes for all cardio subtypes
           duration = 4;
           break;
-        case 'lifting':
-          defaultText = 'Lifting Exercise';
+        case 'strength':
+          const strengthSubtype = subtype as StrengthSubtype;
+          if (strengthSubtype === 'rest') {
+            defaultText = 'Rest';
+            // Set default duration to 1 minute for rest
+            duration = 1;
+          } else {
+            defaultText = 'Set';
+            // Set default reps to 10 and weight to 100 for sets
+            reps = 10;
+            weight = 100;
+          }
           break;
         default:
           defaultText = 'Exercise';
@@ -102,7 +151,9 @@ export const useStore = create<Store>()(
         text: defaultText,
         type: cardType,
         cardioSubtype,
-        duration
+        strengthSubtype: cardType === 'strength' ? (subtype as StrengthSubtype) : undefined,
+        duration,
+        reps
       };
       
       // Insert the new card at the drop position

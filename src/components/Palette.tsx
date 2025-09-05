@@ -3,14 +3,12 @@ import { Draggable, Droppable } from '@hello-pangea/dnd';
 
 const Palette: React.FC = () => {
   return (
-    <div style={{ padding: '16px', color: 'white' }}>
+    <div style={{ padding: '72px 16px 16px 16px', color: 'white' }}>
       
       {/* Cardio Category */}
       <div style={{ 
         marginBottom: '20px', 
-        padding: '10px', 
-        border: '1px solid #ff6b6b', 
-        borderRadius: '8px' 
+        padding: '10px'
       }}>
         <h4 style={{ margin: '0 0 10px 0', color: '#ff6b6b' }}>Cardio</h4>
         
@@ -111,20 +109,20 @@ const Palette: React.FC = () => {
         </Droppable>
       </div>
       
-      {/* Lifting Category */}
+      {/* Strength Category */}
       <div style={{ 
-        padding: '10px', 
-        border: '1px solid #4ecdc4', 
-        borderRadius: '8px' 
+        padding: '10px'
       }}>
-        <h4 style={{ margin: '0 0 10px 0', color: '#4ecdc4' }}>Lifting</h4>
-        <Droppable droppableId="palette-lifting" isDropDisabled={true}>
+        <h4 style={{ margin: '0 0 10px 0', color: '#4ecdc4' }}>Strength</h4>
+        
+        {/* Set */}
+        <Droppable droppableId="palette-strength-set" isDropDisabled={true}>
           {(provided) => (
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
-              <Draggable draggableId="lifting-template" index={0}>
+              <Draggable draggableId="strength-set-template" index={0}>
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
@@ -140,7 +138,39 @@ const Palette: React.FC = () => {
                       ...provided.draggableProps.style
                     }}
                   >
-                    Lifting
+                    Set
+                  </div>
+                )}
+              </Draggable>
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+        
+        {/* Rest */}
+        <Droppable droppableId="palette-strength-rest" isDropDisabled={true}>
+          {(provided) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              <Draggable draggableId="strength-rest-template" index={1}>
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    style={{
+                      padding: '8px',
+                      margin: '8px 0',
+                      border: '1px solid #9b59b6',
+                      borderRadius: '4px',
+                      backgroundColor: '#f3e5f5',
+                      color: 'black',
+                      ...provided.draggableProps.style
+                    }}
+                  >
+                    Rest
                   </div>
                 )}
               </Draggable>

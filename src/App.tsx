@@ -23,14 +23,14 @@ function App() {
             <Palette />
           </Panel>
           
-          <PanelResizeHandle style={{ width: '4px', background: '#ddd' }} />
+          <PanelResizeHandle style={{ width: '12px', background: 'rgba(255, 255, 255, 0.1)', cursor: 'col-resize' }} />
           
           {/* Center Panel - Timeline */}
           <Panel defaultSize={60} minSize={30}>
             <Timeline />
           </Panel>
           
-          <PanelResizeHandle style={{ width: '4px', background: '#ddd' }} />
+          <PanelResizeHandle style={{ width: '12px', background: 'rgba(255, 255, 255, 0.1)', cursor: 'col-resize' }} />
           
           {/* Right Panel - Inspector */}
           <Panel defaultSize={20} minSize={10}>
