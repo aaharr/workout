@@ -3,7 +3,11 @@ import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useStore } from '../store/useStore';
 import { Copy, Trash2 } from 'lucide-react';
 
-const Timeline: React.FC = () => {
+interface TimelineProps {
+  onBlockClick: () => void;
+}
+
+const Timeline: React.FC<TimelineProps> = ({ onBlockClick }) => {
   const { cards, selectedCardIds, setSelectedCardIds, deleteCard, duplicateCard, 
           deleteSelectedCards, duplicateSelectedCards, workoutTitle, updateWorkoutTitle } = useStore();
   const lastSelectedIndex = useRef<number | null>(null);
@@ -170,6 +174,13 @@ const Timeline: React.FC = () => {
                     {...provided.dragHandleProps}
                     onClick={(e) => {
                       const currentIndex = cards.findIndex(c => c.id === card.id);
+                      
+                      // On mobile, always treat as single selection and open inspector
+                      if (window.innerWidth < 768) {
+                        setSelectedCardIds([card.id]);
+                        onBlockClick();
+                        return;
+                      }
                       
                       if (e.shiftKey && lastSelectedIndex.current !== null) {
                         // Range selection between last selected index and current index
