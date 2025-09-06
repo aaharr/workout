@@ -27,3 +27,23 @@ body {
   background-color: rgba(200, 200, 255, 0.9) !important;
 }
 
+/* Mobile-specific styles */
+@media (max-width: 767px) {
+  /* Ensure panels take full width when stacked vertically */
+  .react-resizable-panels {
+    width: 100% !important;
+  }
+  
+  /* Adjust padding for mobile */
+  .timeline-container,
+  .palette-container,
+  .inspector-container {
+    padding: 8px;
+  }
+  
+  /* Make sure timeline is the focus */
+  .timeline-panel {
+    flex: 1;
+  }
+}
+

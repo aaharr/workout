@@ -5,8 +5,9 @@ import type { WorkoutSchema } from '../types/WorkoutSchema';
 import { CURRENT_VERSION } from '../types/WorkoutSchema';
 
 const Inspector: React.FC = () => {
-  const { cards: blocks, selectedCardIds: selectedBlockIds, updateCardText: updateBlockText, updateCardCue: updateBlockCue, updateCardDuration: updateBlockDuration, updateCardReps: updateBlockReps, updateCardWeight: updateBlockWeight, updateCardZone: updateBlockZone, updateCardHr: updateBlockHr, updateCardCadence: updateBlockCadence, clearAllCards: clearAllBlocks, workoutTitle, updateWorkoutTitle, importWorkout } = useStore();
+  const { cards: blocks, selectedCardIds: selectedBlockIds, updateCardText: updateBlockText, updateCardCue: updateBlockCue, updateCardDuration: updateBlockDuration, updateCardReps: updateBlockReps, updateCardWeight: updateBlockWeight, updateCardZone: updateBlockZone, updateCardHr: updateBlockHr, updateCardCadence: updateBlockCadence, clearAllCards: clearAllBlocks, workoutTitle, updateWorkoutTitle, importWorkout, addCard } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const zwiftFileInputRef = useRef<HTMLInputElement>(null);
   
   // Get all selected blocks
   const selectedBlocks = blocks.filter(block => selectedBlockIds.includes(block.id));
@@ -55,6 +56,82 @@ const Inspector: React.FC = () => {
     selectedBlockIds.forEach(id => updateBlockCadence(id, cadence));
   };
   
+  // Helper function to generate Zwift workout XML
+  const generateZwiftWorkout = (title: string, cards: Card[]): string => {
+    const workoutElements = cards
+      .filter(card => card.type === 'cardio' && card.duration)
+      .map(card => {
+        // Convert duration from minutes to seconds
+        const duration = Math.round((card.duration || 0) * 60);
+        // Map zone to power (simplified mapping)
+        const power = card.zone ? (0.4 + (card.zone - 1) * 0.1).toFixed(2) : '0.50';
+        return `<SteadyState Duration="${duration}" Power="${power}"/>`;
+      })
+      .join('\n        ');
+    
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+    <author>Workout Builder</author>
+    <name>${title}</name>
+    <description>${title}</description>
+    <sportType>bike</sportType>
+    <tags/>
+    <workout>
+        ${workoutElements}
+    </workout>
+</workout_file>`;
+  };
+
+  // Helper function to parse Zwift workout XML
+  const parseZwiftWorkout = (xmlContent: string) => {
+    try {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
+      
+      const nameElement = xmlDoc.querySelector('name');
+      const title = nameElement?.textContent || 'Imported Zwift Workout';
+      
+      const workoutElement = xmlDoc.querySelector('workout');
+      const steadyStateElements = workoutElement?.querySelectorAll('SteadyState');
+      
+      if (!steadyStateElements || steadyStateElements.length === 0) {
+        alert('No valid workout segments found in the Zwift file');
+        return;
+      }
+      
+      // Clear existing workout
+      clearAllBlocks();
+      updateWorkoutTitle(title);
+      
+      // Add each segment as a cardio interval block
+      Array.from(steadyStateElements).forEach((element, index) => {
+        const durationAttr = element.getAttribute('Duration');
+        const powerAttr = element.getAttribute('Power');
+        
+        if (durationAttr) {
+          const durationMinutes = Math.round(parseInt(durationAttr) / 60);
+          // Convert power to zone (simplified mapping)
+          const power = powerAttr ? parseFloat(powerAttr) : 0.5;
+          const zone = Math.min(6, Math.max(1, Math.round((power - 0.4) / 0.1) + 1));
+          
+          const newCard: Card = {
+            id: `card-${Date.now()}-${index}`,
+            text: `Interval Zone ${zone}`,
+            type: 'cardio',
+            cardioSubtype: 'interval',
+            duration: durationMinutes,
+            zone: zone
+          };
+          addCard(newCard);
+        }
+      });
+      
+    } catch (error) {
+      alert('Error parsing Zwift workout file');
+      console.error(error);
+    }
+  };
+
   return (
     <div style={{ 
       padding: '72px 16px 16px 16px', 
@@ -403,6 +480,49 @@ const Inspector: React.FC = () => {
         >
           💾 Export Workout
         </button>
+
+        {/* Zwift Export Button */}
+        <button
+          onClick={() => {
+            // Convert blocks to Zwift format
+            const zwiftWorkout = generateZwiftWorkout(workoutTitle, blocks);
+            const dataStr = zwiftWorkout;
+            const dataUri = 'data:application/xml;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `${workoutTitle.replace(/\s+/g, '_')}_zwift_workout.zwo`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+          }}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: 'rgba(255, 165, 0, 0.2)',
+            color: 'rgba(255, 165, 0, 0.8)',
+            border: '1px dotted rgba(255, 165, 0, 0.6)',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 165, 0, 0.3)';
+            e.currentTarget.style.color = 'rgba(255, 165, 0, 1)';
+            e.currentTarget.style.border = '1px dotted rgba(255, 165, 0, 0.8)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 165, 0, 0.2)';
+            e.currentTarget.style.color = 'rgba(255, 165, 0, 0.8)';
+            e.currentTarget.style.border = '1px dotted rgba(255, 165, 0, 0.6)';
+          }}
+        >
+          🚴 Export to Zwift (.zwo)
+        </button>
         
         {/* Import Button */}
         <input
@@ -471,6 +591,65 @@ const Inspector: React.FC = () => {
           }}
         >
           📥 Import Workout
+        </button>
+
+        {/* Zwift Import Button */}
+        <input
+          type="file"
+          accept=".zwo"
+          ref={zwiftFileInputRef}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                try {
+                  const content = event.target?.result;
+                  if (typeof content === 'string') {
+                    parseZwiftWorkout(content);
+                  }
+                } catch (error) {
+                  alert('Error parsing Zwift workout file');
+                  console.error(error);
+                }
+              };
+              reader.readAsText(file);
+            }
+            // Reset the file input
+            if (e.target) {
+              e.target.value = '';
+            }
+          }}
+          style={{ display: 'none' }}
+        />
+        <button
+          onClick={() => zwiftFileInputRef.current?.click()}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: 'rgba(255, 140, 0, 0.2)',
+            color: 'rgba(255, 140, 0, 0.8)',
+            border: '1px dotted rgba(255, 140, 0, 0.6)',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 140, 0, 0.3)';
+            e.currentTarget.style.color = 'rgba(255, 140, 0, 1)';
+            e.currentTarget.style.border = '1px dotted rgba(255, 140, 0, 0.8)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 140, 0, 0.2)';
+            e.currentTarget.style.color = 'rgba(255, 140, 0, 0.8)';
+            e.currentTarget.style.border = '1px dotted rgba(255, 140, 0, 0.6)';
+          }}
+        >
+          🚴 Import from Zwift (.zwo)
         </button>
         
         {/* Clear Workout Button */}
