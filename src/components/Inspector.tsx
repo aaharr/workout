@@ -8,8 +8,52 @@ const Inspector: React.FC = () => {
   const { cards: blocks, selectedCardIds: selectedBlockIds, updateCardText: updateBlockText, updateCardCue: updateBlockCue, updateCardDuration: updateBlockDuration, updateCardReps: updateBlockReps, updateCardWeight: updateBlockWeight, updateCardZone: updateBlockZone, updateCardHr: updateBlockHr, updateCardCadence: updateBlockCadence, clearAllCards: clearAllBlocks, workoutTitle, updateWorkoutTitle, importWorkout } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // For now, only show inspector for single selection
-  const selectedBlock = selectedBlockIds.length === 1 ? blocks.find(block => block.id === selectedBlockIds[0]) : null;
+  // Get all selected blocks
+  const selectedBlocks = blocks.filter(block => selectedBlockIds.includes(block.id));
+  
+  // Check if all selected blocks are of the same type and subtype
+  const areAllSameType = selectedBlocks.length > 0 && 
+    selectedBlocks.every(block => 
+      block.type === selectedBlocks[0].type && 
+      block.cardioSubtype === selectedBlocks[0].cardioSubtype && 
+      block.strengthSubtype === selectedBlocks[0].strengthSubtype
+    );
+  
+  // Use the first selected block for display when all are the same type
+  const firstSelectedBlock = selectedBlocks.length > 0 ? selectedBlocks[0] : null;
+  
+  // Helper functions to update all selected blocks
+  const updateAllSelectedText = (text: string) => {
+    selectedBlockIds.forEach(id => updateBlockText(id, text));
+  };
+  
+  const updateAllSelectedCue = (cue: string) => {
+    selectedBlockIds.forEach(id => updateBlockCue(id, cue));
+  };
+  
+  const updateAllSelectedDuration = (duration: number) => {
+    selectedBlockIds.forEach(id => updateBlockDuration(id, duration));
+  };
+  
+  const updateAllSelectedReps = (reps: number) => {
+    selectedBlockIds.forEach(id => updateBlockReps(id, reps));
+  };
+  
+  const updateAllSelectedWeight = (weight: number) => {
+    selectedBlockIds.forEach(id => updateBlockWeight(id, weight));
+  };
+  
+  const updateAllSelectedZone = (zone: number) => {
+    selectedBlockIds.forEach(id => updateBlockZone(id, zone));
+  };
+  
+  const updateAllSelectedHr = (hr: number | undefined) => {
+    selectedBlockIds.forEach(id => updateBlockHr(id, hr));
+  };
+  
+  const updateAllSelectedCadence = (cadence: number | undefined) => {
+    selectedBlockIds.forEach(id => updateBlockCadence(id, cadence));
+  };
   
   return (
     <div style={{ 
@@ -20,14 +64,15 @@ const Inspector: React.FC = () => {
       flexDirection: 'column'
     }}>
       <div style={{ flex: 1, overflow: 'auto' }}>
-        {selectedBlock ? (
+        {selectedBlockIds.length === 1 && firstSelectedBlock ? (
+          // Single selection - original logic
           <>
             {/* Description Field */}
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Description</h4>
               <textarea
-                value={selectedBlock.text}
-                onChange={(e) => updateBlockText(selectedBlock.id, e.target.value)}
+                value={firstSelectedBlock.text}
+                onChange={(e) => updateBlockText(firstSelectedBlock.id, e.target.value)}
                 style={{ width: '100%', minHeight: '60px', color: 'black', padding: '4px' }}
               />
             </div>
@@ -36,21 +81,21 @@ const Inspector: React.FC = () => {
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Message</h4>
               <textarea
-                value={selectedBlock.cue || ''}
-                onChange={(e) => updateBlockCue(selectedBlock.id, e.target.value)}
+                value={firstSelectedBlock.cue || ''}
+                onChange={(e) => updateBlockCue(firstSelectedBlock.id, e.target.value)}
                 style={{ width: '100%', minHeight: '40px', color: 'black', padding: '4px' }}
                 placeholder=""
               />
             </div>
             
             {/* Duration Field for Cardio */}
-            {selectedBlock.type === 'cardio' && selectedBlock.duration !== undefined && (
+            {firstSelectedBlock.type === 'cardio' && firstSelectedBlock.duration !== undefined && (
               <div style={{ marginBottom: '16px' }}>
                 <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Minutes</h4>
                 <input
                   type="number"
-                  value={selectedBlock.duration ?? ''}
-                  onChange={(e) => updateBlockDuration(selectedBlock.id, Number(e.target.value))}
+                  value={firstSelectedBlock.duration ?? ''}
+                  onChange={(e) => updateBlockDuration(firstSelectedBlock.id, Number(e.target.value))}
                   min="1"
                   style={{ width: '100%', color: 'black', padding: '4px' }}
                 />
@@ -58,16 +103,15 @@ const Inspector: React.FC = () => {
             )}
             
             {/* Zone Field for Interval */}
-            {selectedBlock.type === 'cardio' && selectedBlock.cardioSubtype === 'interval' && (
+            {firstSelectedBlock.type === 'cardio' && firstSelectedBlock.cardioSubtype === 'interval' && (
               <div style={{ marginBottom: '16px' }}>
                 <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Zone</h4>
                 <input
                   type="number"
-                  value={selectedBlock.zone ?? 1}
+                  value={firstSelectedBlock.zone ?? 1}
                   onChange={(e) => {
                     const value = e.target.value;
-                    // Handle empty input by setting to default of 1
-                    updateBlockZone(selectedBlock.id, value === '' ? 1 : Number(value));
+                    updateBlockZone(firstSelectedBlock.id, value === '' ? 1 : Number(value));
                   }}
                   min="1"
                   max="6"
@@ -77,16 +121,15 @@ const Inspector: React.FC = () => {
             )}
             
             {/* Heart Rate Field for Interval */}
-            {selectedBlock.type === 'cardio' && selectedBlock.cardioSubtype === 'interval' && (
+            {firstSelectedBlock.type === 'cardio' && firstSelectedBlock.cardioSubtype === 'interval' && (
               <div style={{ marginBottom: '16px' }}>
                 <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Heart Rate</h4>
                 <input
                   type="number"
-                  value={selectedBlock.hr ?? ''}
+                  value={firstSelectedBlock.hr ?? ''}
                   onChange={(e) => {
                     const value = e.target.value;
-                    // Handle empty input by setting to undefined
-                    updateBlockHr(selectedBlock.id, value === '' ? undefined : Number(value));
+                    updateBlockHr(firstSelectedBlock.id, value === '' ? undefined : Number(value));
                   }}
                   min="0"
                   style={{ width: '100%', color: 'black', padding: '4px' }}
@@ -96,16 +139,15 @@ const Inspector: React.FC = () => {
             )}
             
             {/* Cadence Field for Interval */}
-            {selectedBlock.type === 'cardio' && selectedBlock.cardioSubtype === 'interval' && (
+            {firstSelectedBlock.type === 'cardio' && firstSelectedBlock.cardioSubtype === 'interval' && (
               <div style={{ marginBottom: '16px' }}>
                 <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Cadence</h4>
                 <input
                   type="number"
-                  value={selectedBlock.cadence ?? ''}
+                  value={firstSelectedBlock.cadence ?? ''}
                   onChange={(e) => {
                     const value = e.target.value;
-                    // Handle empty input by setting to undefined
-                    updateBlockCadence(selectedBlock.id, value === '' ? undefined : Number(value));
+                    updateBlockCadence(firstSelectedBlock.id, value === '' ? undefined : Number(value));
                   }}
                   min="0"
                   style={{ width: '100%', color: 'black', padding: '4px' }}
@@ -115,13 +157,13 @@ const Inspector: React.FC = () => {
             )}
             
             {/* Duration Field for Strength Rest */}
-            {selectedBlock.type === 'strength' && selectedBlock.strengthSubtype === 'rest' && selectedBlock.duration !== undefined && (
+            {firstSelectedBlock.type === 'strength' && firstSelectedBlock.strengthSubtype === 'rest' && firstSelectedBlock.duration !== undefined && (
               <div style={{ marginBottom: '16px' }}>
                 <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Duration (minutes):</h4>
                 <input
                   type="number"
-                  value={selectedBlock.duration ?? ''}
-                  onChange={(e) => updateBlockDuration(selectedBlock.id, Number(e.target.value))}
+                  value={firstSelectedBlock.duration ?? ''}
+                  onChange={(e) => updateBlockDuration(firstSelectedBlock.id, Number(e.target.value))}
                   min="1"
                   style={{ width: '100%', color: 'black', padding: '4px' }}
                 />
@@ -129,14 +171,14 @@ const Inspector: React.FC = () => {
             )}
             
             {/* Reps and Weight Fields for Strength Set */}
-            {selectedBlock.type === 'strength' && selectedBlock.strengthSubtype === 'set' && selectedBlock.reps !== undefined && (
+            {firstSelectedBlock.type === 'strength' && firstSelectedBlock.strengthSubtype === 'set' && firstSelectedBlock.reps !== undefined && (
               <>
                 <div style={{ marginBottom: '16px' }}>
                   <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Reps:</h4>
                   <input
                     type="number"
-                    value={selectedBlock.reps ?? ''}
-                    onChange={(e) => updateBlockReps(selectedBlock.id, Number(e.target.value))}
+                    value={firstSelectedBlock.reps ?? ''}
+                    onChange={(e) => updateBlockReps(firstSelectedBlock.id, Number(e.target.value))}
                     min="1"
                     style={{ width: '100%', color: 'black', padding: '4px' }}
                   />
@@ -145,8 +187,8 @@ const Inspector: React.FC = () => {
                   <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Weight (lbs):</h4>
                   <input
                     type="number"
-                    value={selectedBlock.weight ?? ''}
-                    onChange={(e) => updateBlockWeight(selectedBlock.id, Number(e.target.value))}
+                    value={firstSelectedBlock.weight ?? ''}
+                    onChange={(e) => updateBlockWeight(firstSelectedBlock.id, Number(e.target.value))}
                     min="0"
                     style={{ width: '100%', color: 'black', padding: '4px' }}
                   />
@@ -155,11 +197,149 @@ const Inspector: React.FC = () => {
             )}
           </>
         ) : selectedBlockIds.length > 1 ? (
-          <div style={{ padding: '16px', textAlign: 'center', color: '#888' }}>
-            <p style={{ margin: '24px 0 8px 0', fontSize: '14px', fontStyle: 'italic' }}>
-              {selectedBlockIds.length} blocks selected
-            </p>
-          </div>
+          areAllSameType && firstSelectedBlock ? (
+            // Multiple selection of same type - show all relevant fields for the type, update all on change
+            <>
+              {/* Description Field */}
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Description</h4>
+                <textarea
+                  value={firstSelectedBlock.text}
+                  onChange={(e) => updateAllSelectedText(e.target.value)}
+                  style={{ width: '100%', minHeight: '60px', color: 'black', padding: '4px' }}
+                />
+              </div>
+              
+              {/* Cue Field - Always visible for all blocks */}
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Message</h4>
+                <textarea
+                  value={firstSelectedBlock.cue || ''}
+                  onChange={(e) => updateAllSelectedCue(e.target.value)}
+                  style={{ width: '100%', minHeight: '40px', color: 'black', padding: '4px' }}
+                  placeholder=""
+                />
+              </div>
+              
+              {/* Duration Field for Cardio */}
+              {firstSelectedBlock.type === 'cardio' && firstSelectedBlock.duration !== undefined && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Minutes</h4>
+                  <input
+                    type="number"
+                    value={firstSelectedBlock.duration ?? ''}
+                    onChange={(e) => updateAllSelectedDuration(Number(e.target.value))}
+                    min="1"
+                    style={{ width: '100%', color: 'black', padding: '4px' }}
+                  />
+                </div>
+              )}
+              
+              {/* Zone Field for Interval */}
+              {firstSelectedBlock.type === 'cardio' && firstSelectedBlock.cardioSubtype === 'interval' && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Zone</h4>
+                  <input
+                    type="number"
+                    value={firstSelectedBlock.zone ?? 1}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateAllSelectedZone(value === '' ? 1 : Number(value));
+                    }}
+                    min="1"
+                    max="6"
+                    style={{ width: '100%', color: 'black', padding: '4px' }}
+                  />
+                </div>
+              )}
+              
+              {/* Heart Rate Field for Interval */}
+              {firstSelectedBlock.type === 'cardio' && firstSelectedBlock.cardioSubtype === 'interval' && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Heart Rate</h4>
+                  <input
+                    type="number"
+                    value={firstSelectedBlock.hr ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateAllSelectedHr(value === '' ? undefined : Number(value));
+                    }}
+                    min="0"
+                    style={{ width: '100%', color: 'black', padding: '4px' }}
+                    placeholder="Enter heart rate"
+                  />
+                </div>
+              )}
+              
+              {/* Cadence Field for Interval */}
+              {firstSelectedBlock.type === 'cardio' && firstSelectedBlock.cardioSubtype === 'interval' && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Cadence</h4>
+                  <input
+                    type="number"
+                    value={firstSelectedBlock.cadence ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateAllSelectedCadence(value === '' ? undefined : Number(value));
+                    }}
+                    min="0"
+                    style={{ width: '100%', color: 'black', padding: '4px' }}
+                    placeholder="Enter cadence"
+                  />
+                </div>
+              )}
+              
+              {/* Duration Field for Strength Rest */}
+              {firstSelectedBlock.type === 'strength' && firstSelectedBlock.strengthSubtype === 'rest' && firstSelectedBlock.duration !== undefined && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Duration (minutes):</h4>
+                  <input
+                    type="number"
+                    value={firstSelectedBlock.duration ?? ''}
+                    onChange={(e) => updateAllSelectedDuration(Number(e.target.value))}
+                    min="1"
+                    style={{ width: '100%', color: 'black', padding: '4px' }}
+                  />
+                </div>
+              )}
+              
+              {/* Reps and Weight Fields for Strength Set */}
+              {firstSelectedBlock.type === 'strength' && firstSelectedBlock.strengthSubtype === 'set' && firstSelectedBlock.reps !== undefined && (
+                <>
+                  <div style={{ marginBottom: '16px' }}>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Reps:</h4>
+                    <input
+                      type="number"
+                      value={firstSelectedBlock.reps ?? ''}
+                      onChange={(e) => updateAllSelectedReps(Number(e.target.value))}
+                      min="1"
+                      style={{ width: '100%', color: 'black', padding: '4px' }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Weight (lbs):</h4>
+                    <input
+                      type="number"
+                      value={firstSelectedBlock.weight ?? ''}
+                      onChange={(e) => updateAllSelectedWeight(Number(e.target.value))}
+                      min="0"
+                      style={{ width: '100%', color: 'black', padding: '4px' }}
+                    />
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            // Multiple selection of different types
+            <div style={{ padding: '16px', textAlign: 'center', color: '#888' }}>
+              <p style={{ margin: '24px 0 8px 0', fontSize: '14px', fontStyle: 'italic' }}>
+                {selectedBlockIds.length} blocks selected
+              </p>
+              <p style={{ margin: '8px 0', fontSize: '12px', color: '#ff6b6b' }}>
+                Multiple block types selected - cannot edit
+              </p>
+            </div>
+          )
         ) : (
           <div style={{ padding: '16px', textAlign: 'center', color: '#888' }}>
             <p style={{ margin: '24px 0 8px 0', fontSize: '14px', fontStyle: 'italic' }}>
