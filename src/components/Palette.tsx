@@ -34,46 +34,14 @@ const Palette: React.FC = () => {
                     style={{
                       padding: '8px',
                       margin: '8px 0',
-                      border: '1px solid #ffa500',
+                      border: '1px solid #9e9e9e',
                       borderRadius: '4px',
-                      backgroundColor: '#fff3e0',
+                      backgroundColor: '#f5f5f5',
                       color: 'black',
                       ...provided.draggableProps.style
                     }}
                   >
                     Warmup
-                  </div>
-                )}
-              </Draggable>
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-        
-        {/* Cooldown */}
-        <Droppable droppableId="palette-cardio-cooldown" isDropDisabled={true}>
-          {(provided) => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-            >
-              <Draggable draggableId="cardio-cooldown-template" index={1}>
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    style={{
-                      padding: '8px',
-                      margin: '8px 0',
-                      border: '1px solid #4169e1',
-                      borderRadius: '4px',
-                      backgroundColor: '#e3f2fd',
-                      color: 'black',
-                      ...provided.draggableProps.style
-                    }}
-                  >
-                    Cooldown
                   </div>
                 )}
               </Draggable>
@@ -89,7 +57,7 @@ const Palette: React.FC = () => {
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
-              <Draggable draggableId="cardio-interval-template" index={2}>
+              <Draggable draggableId="cardio-interval-template" index={1}>
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
@@ -98,14 +66,46 @@ const Palette: React.FC = () => {
                     style={{
                       padding: '8px',
                       margin: '8px 0',
-                      border: '1px solid #ff6b6b',
+                      border: '1px solid #2196f3',
                       borderRadius: '4px',
-                      backgroundColor: '#ffe6e6',
+                      backgroundColor: '#e3f2fd',
                       color: 'black',
                       ...provided.draggableProps.style
                     }}
                   >
                     Interval
+                  </div>
+                )}
+              </Draggable>
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+        
+        {/* Cooldown */}
+        <Droppable droppableId="palette-cardio-cooldown" isDropDisabled={true}>
+          {(provided) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              <Draggable draggableId="cardio-cooldown-template" index={2}>
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    style={{
+                      padding: '8px',
+                      margin: '8px 0',
+                      border: '1px solid #9e9e9e',
+                      borderRadius: '4px',
+                      backgroundColor: '#f5f5f5',
+                      color: 'black',
+                      ...provided.draggableProps.style
+                    }}
+                  >
+                    Cooldown
                   </div>
                 )}
               </Draggable>
@@ -198,14 +198,8 @@ const Palette: React.FC = () => {
           color: '#888',
           fontSize: '14px'
         }}>
-          <p style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>
-            Welcome to your workout planner!
-          </p>
           <p style={{ margin: '0 0 4px 0' }}>
-            1. Drag a block from the palette above
-          </p>
-          <p style={{ margin: '0' }}>
-            2. Click on any block to edit its details
+            Drag a block from the palette above to get started!
           </p>
         </div>
       </div>

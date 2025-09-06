@@ -5,7 +5,7 @@ import type { WorkoutSchema } from '../types/WorkoutSchema';
 import { CURRENT_VERSION } from '../types/WorkoutSchema';
 
 const Inspector: React.FC = () => {
-  const { cards: blocks, selectedCardIds: selectedBlockIds, updateCardText: updateBlockText, updateCardCue: updateBlockCue, updateCardDuration: updateBlockDuration, updateCardReps: updateBlockReps, updateCardWeight: updateBlockWeight, clearAllCards: clearAllBlocks, workoutTitle, updateWorkoutTitle, importWorkout } = useStore();
+  const { cards: blocks, selectedCardIds: selectedBlockIds, updateCardText: updateBlockText, updateCardCue: updateBlockCue, updateCardDuration: updateBlockDuration, updateCardReps: updateBlockReps, updateCardWeight: updateBlockWeight, updateCardZone: updateBlockZone, updateCardHr: updateBlockHr, updateCardCadence: updateBlockCadence, clearAllCards: clearAllBlocks, workoutTitle, updateWorkoutTitle, importWorkout } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // For now, only show inspector for single selection
@@ -24,7 +24,7 @@ const Inspector: React.FC = () => {
           <>
             {/* Description Field */}
             <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Description:</h4>
+              <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Description</h4>
               <textarea
                 value={selectedBlock.text}
                 onChange={(e) => updateBlockText(selectedBlock.id, e.target.value)}
@@ -34,25 +34,82 @@ const Inspector: React.FC = () => {
             
             {/* Cue Field - Always visible for all blocks */}
             <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Cue:</h4>
+              <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Message</h4>
               <textarea
                 value={selectedBlock.cue || ''}
                 onChange={(e) => updateBlockCue(selectedBlock.id, e.target.value)}
                 style={{ width: '100%', minHeight: '40px', color: 'black', padding: '4px' }}
-                placeholder="Enter cue information"
+                placeholder=""
               />
             </div>
             
             {/* Duration Field for Cardio */}
             {selectedBlock.type === 'cardio' && selectedBlock.duration !== undefined && (
               <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Duration (minutes):</h4>
+                <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Minutes</h4>
                 <input
                   type="number"
                   value={selectedBlock.duration ?? ''}
                   onChange={(e) => updateBlockDuration(selectedBlock.id, Number(e.target.value))}
                   min="1"
                   style={{ width: '100%', color: 'black', padding: '4px' }}
+                />
+              </div>
+            )}
+            
+            {/* Zone Field for Interval */}
+            {selectedBlock.type === 'cardio' && selectedBlock.cardioSubtype === 'interval' && (
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Zone</h4>
+                <input
+                  type="number"
+                  value={selectedBlock.zone ?? 1}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Handle empty input by setting to default of 1
+                    updateBlockZone(selectedBlock.id, value === '' ? 1 : Number(value));
+                  }}
+                  min="1"
+                  max="6"
+                  style={{ width: '100%', color: 'black', padding: '4px' }}
+                />
+              </div>
+            )}
+            
+            {/* Heart Rate Field for Interval */}
+            {selectedBlock.type === 'cardio' && selectedBlock.cardioSubtype === 'interval' && (
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Heart Rate</h4>
+                <input
+                  type="number"
+                  value={selectedBlock.hr ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Handle empty input by setting to undefined
+                    updateBlockHr(selectedBlock.id, value === '' ? undefined : Number(value));
+                  }}
+                  min="0"
+                  style={{ width: '100%', color: 'black', padding: '4px' }}
+                  placeholder="Enter heart rate"
+                />
+              </div>
+            )}
+            
+            {/* Cadence Field for Interval */}
+            {selectedBlock.type === 'cardio' && selectedBlock.cardioSubtype === 'interval' && (
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ margin: '0 0 4px 0', color: '#888888' }}>Cadence</h4>
+                <input
+                  type="number"
+                  value={selectedBlock.cadence ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Handle empty input by setting to undefined
+                    updateBlockCadence(selectedBlock.id, value === '' ? undefined : Number(value));
+                  }}
+                  min="0"
+                  style={{ width: '100%', color: 'black', padding: '4px' }}
+                  placeholder="Enter cadence"
                 />
               </div>
             )}

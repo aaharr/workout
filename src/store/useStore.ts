@@ -16,6 +16,9 @@ export interface Card {
   duration?: number; // in minutes
   reps?: number;
   weight?: number; // in arbitrary units
+  zone?: number; // 1-6 for interval blocks
+  hr?: number; // heart rate
+  cadence?: number; // cadence
 }
 
 interface Store {
@@ -87,6 +90,24 @@ export const useStore = create<Store>()(
   updateCardWeight: (id: string, weight: number) => set((state) => ({
     cards: state.cards.map(card => 
       card.id === id ? { ...card, weight } : card
+    )
+  })),
+  
+  updateCardZone: (id: string, zone: number) => set((state) => ({
+    cards: state.cards.map(card => 
+      card.id === id ? { ...card, zone } : card
+    )
+  })),
+  
+  updateCardHr: (id: string, hr: number) => set((state) => ({
+    cards: state.cards.map(card => 
+      card.id === id ? { ...card, hr } : card
+    )
+  })),
+  
+  updateCardCadence: (id: string, cadence: number) => set((state) => ({
+    cards: state.cards.map(card => 
+      card.id === id ? { ...card, cadence } : card
     )
   })),
   
@@ -203,7 +224,9 @@ export const useStore = create<Store>()(
         cardioSubtype,
         strengthSubtype: cardType === 'strength' ? (subtype as StrengthSubtype) : undefined,
         duration,
-        reps
+        reps,
+        // Set default zone to 1 for interval blocks
+        zone: (cardType === 'cardio' && cardioSubtype === 'interval') ? 1 : undefined
       };
       
       // Insert the new card at the drop position

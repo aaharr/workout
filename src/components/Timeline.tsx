@@ -29,18 +29,29 @@ const Timeline: React.FC = () => {
     switch (card.cardioSubtype) {
       case 'warmup':
         return {
-          border: '1px solid #ffa500',
-          backgroundColor: '#fff3e0',
+          border: '1px solid #9e9e9e',
+          backgroundColor: '#f5f5f5',
         };
       case 'cooldown':
         return {
-          border: '1px solid #4169e1',
-          backgroundColor: '#e3f2fd',
+          border: '1px solid #9e9e9e',
+          backgroundColor: '#f5f5f5',
         };
       case 'interval':
+        // Determine color based on zone
+        const zone = card.zone || 1;
+        const zoneColors = [
+          { border: '#9e9e9e', background: '#f5f5f5' },      // Zone 1: Gray
+          { border: '#2196f3', background: '#e3f2fd' },      // Zone 2: Blue
+          { border: '#4caf50', background: '#e8f5e8' },      // Zone 3: Green
+          { border: '#ff9800', background: '#fff3e0' },      // Zone 4: Orange
+          { border: '#f44336', background: '#ffebee' },      // Zone 5: Red
+          { border: '#d32f2f', background: '#ffcdd2' }       // Zone 6: Bright Red
+        ];
+        const zoneIndex = Math.min(Math.max(zone, 1), 6) - 1;
         return {
-          border: '1px solid #ff6b6b',
-          backgroundColor: '#ffe6e6',
+          border: `1px solid ${zoneColors[zoneIndex].border}`,
+          backgroundColor: zoneColors[zoneIndex].background,
         };
       default:
         return {
@@ -229,6 +240,16 @@ const Timeline: React.FC = () => {
                         {card.weight && (
                           <div style={{ fontSize: '12px', opacity: 0.8, whiteSpace: 'nowrap' }}>
                             {card.weight} lbs
+                          </div>
+                        )}
+                        {card.hr && (
+                          <div style={{ fontSize: '12px', opacity: 0.8, whiteSpace: 'nowrap' }}>
+                            {card.hr} bpm
+                          </div>
+                        )}
+                        {card.cadence && (
+                          <div style={{ fontSize: '12px', opacity: 0.8, whiteSpace: 'nowrap' }}>
+                            {card.cadence} rpm
                           </div>
                         )}
                       </div>
